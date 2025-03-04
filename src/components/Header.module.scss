@@ -1,0 +1,26 @@
+.header {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background-color: #fff;
+  color: white;
+}
+
+.menuButton {
+  position: absolute;
+  top: 29px;
+  left: 29px;
+
+  font-size: 24px;
+  background-color: #fff;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #000;
+}

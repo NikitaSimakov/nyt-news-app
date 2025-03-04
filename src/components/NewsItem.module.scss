@@ -1,0 +1,27 @@
+.newsItem {
+  padding: 16px;
+  border-bottom: 1px solid #ddd;
+}
+
+.image {
+  width: 100%;
+  border-radius: 8px;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.source {
+  font-size: 12px;
+  color: gray;
+}
+
+.link {
+  color: #2563eb;
+  text-decoration: underline;
+  display: block;
+  margin-top: 4px;
+}
