@@ -1,14 +1,7 @@
 import React from "react";
 import styles from "./NewsItem.module.scss";
 import { format, parseISO } from "date-fns";
-
-export interface NewsItemProps {
-  title: string;
-  url: string;
-  // image?: string;
-  source: string;
-  date: string;
-}
+import type { NewsItemProps } from "../types/newsItem.type";
 
 const NewsItem: React.FC<NewsItemProps> = ({
   title,
@@ -18,27 +11,25 @@ const NewsItem: React.FC<NewsItemProps> = ({
   date,
 }) => {
   return (
-    <div className={styles.newsItem}>
+    <li className={styles.newsItem}>
       <a
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        // className={styles.link}
-      >
-        {/* {image && <img src={image} alt={title} className={styles.image} />} */}
-        <h2 className={styles.title}>{title}</h2>
-        <p className={styles.source}>{source}</p>
-        {/* <a
         href={url}
         target="_blank"
         rel="noopener noreferrer"
         className={styles.link}
       >
-        Читать далее
-      </a> */}
-        <p>{format(parseISO(date), "MMM dd, yyyy, hh.mm a")}</p>
+        <img src="../../public/default.png" alt="Изображение" />
+        {/* {image && <img src={image} alt={title} className={styles.image} />} */}
+        <div>
+          <p className={styles.source}>{source}</p>
+          <p className={styles.title}>{title}</p>
+
+          <p className={styles.date}>
+            {format(parseISO(date), "MMM dd, yyyy, hh.mm a")}
+          </p>
+        </div>
       </a>
-    </div>
+    </li>
   );
 };
 

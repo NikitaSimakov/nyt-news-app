@@ -9,9 +9,13 @@ import { loadMoreNews, setAllNews } from "../store/slices/newsSlice";
 const NewsList: React.FC = () => {
   const dispatch = useAppDispatch();
   const { displayedNews } = useAppSelector((state) => state.news);
+  const date = new Date();
+  const month = date.getMonth() + 1;
+  const year = date.getFullYear();
+
   const { data, isLoading, error } = useGetNewsByDateQuery({
-    year: 2024,
-    month: 2,
+    month,
+    year,
   });
 
   useEffect(() => {
@@ -27,17 +31,32 @@ const NewsList: React.FC = () => {
   if (isLoading) return <Loader />;
   if (error) return <p className={styles.error}>Ошибка загрузки данных</p>;
 
+  const groupedNews: Record<string, typeof displayedNews> =
+    displayedNews.reduce((acc, article) => {
+      const date = new Date(article.pub_date).toLocaleDateString("ru-RU"); // Преобразуем в `5.03.25`
+      if (!acc[date]) acc[date] = []; // Если даты еще нет в объекте → создаем массив
+      acc[date].push(article); // Добавляем новость в соответствующую дату
+      return acc;
+    }, {} as Record<string, typeof displayedNews>);
+
   return (
     <div className={styles.newsList}>
-      {displayedNews.map((article: any) => (
-        <NewsItem
-          key={article._id}
-          title={article.abstract}
-          url={article.web_url}
-          // image={article.multimedia?.[0]?.url}
-          source={article.source}
-          date={article.pub_date}
-        />
+      {Object.entries(groupedNews).map(([date, articles]) => (
+        <div key={date}>
+          <h2 className={styles.date}>{`News for ${date}`}</h2>{" "}
+          {/* Заголовок даты */}
+          <ul>
+            {articles.map((article) => (
+              <NewsItem
+                key={article._id}
+                title={article.abstract}
+                url={article.web_url}
+                source={article.source}
+                date={article.pub_date}
+              />
+            ))}
+          </ul>
+        </div>
       ))}
       <button onClick={handleLoadMore}>Загрузить еще</button>
     </div>

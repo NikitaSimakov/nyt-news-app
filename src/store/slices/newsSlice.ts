@@ -1,9 +1,9 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { NewsItemProps } from "../../components/NewsItem";
+import type { NewsArticle } from "../../types/article.type";
 
 interface NewsState {
-  allNews: NewsItemProps[];
-  displayedNews: NewsItemProps[];
+  allNews: NewsArticle[];
+  displayedNews: NewsArticle[];
   newsLimit: number;
 }
 
@@ -17,13 +17,24 @@ const newsSlice = createSlice({
   name: "news",
   initialState,
   reducers: {
-    setAllNews(state, action: PayloadAction<NewsItemProps[]>) {
-      state.allNews = action.payload;
-      state.displayedNews = action.payload.slice(0, state.newsLimit);
+    setAllNews(state, action: PayloadAction<NewsArticle[]>) {
+      state.allNews = action.payload; // Храним полный список новостей
+      state.newsLimit = 10; // Начальное количество новостей
+      state.displayedNews = [
+        ...state.allNews.slice(-state.newsLimit),
+      ].reverse(); // Последние 10 новостей (свежие сверху)
     },
+
     loadMoreNews(state) {
-      state.newsLimit += 10;
-      state.displayedNews = state.allNews.slice(0, state.newsLimit);
+      const nextNews = state.allNews.slice(
+        state.newsLimit,
+        state.newsLimit + 10
+      ); // Берем следующую порцию
+
+      if (nextNews.length > 0) {
+        state.displayedNews = [...state.displayedNews, ...nextNews]; // Добавляем новости в КОНЕЦ списка
+        state.newsLimit += 10; // Увеличиваем лимит
+      }
     },
   },
 });
