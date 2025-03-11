@@ -10,7 +10,7 @@ interface NewsState {
 const initialState: NewsState = {
   allNews: [],
   displayedNews: [],
-  newsLimit: 10,
+  newsLimit: 100,
 };
 
 const newsSlice = createSlice({
@@ -18,22 +18,31 @@ const newsSlice = createSlice({
   initialState,
   reducers: {
     setAllNews(state, action: PayloadAction<NewsArticle[]>) {
-      state.allNews = action.payload; // Храним полный список новостей
-      state.newsLimit = 10; // Начальное количество новостей
-      state.displayedNews = [
-        ...state.allNews.slice(-state.newsLimit),
-      ].reverse(); // Последние 10 новостей (свежие сверху)
-    },
+      const reversedNews = [...action.payload].reverse().slice(0, 300);
 
+      state.allNews = [...state.allNews, ...reversedNews];
+
+      state.newsLimit = 100;
+      state.displayedNews = state.allNews.slice(0, state.newsLimit);
+    },
     loadMoreNews(state) {
       const nextNews = state.allNews.slice(
         state.newsLimit,
-        state.newsLimit + 10
-      ); // Берем следующую порцию
+        state.newsLimit + 100
+      );
 
       if (nextNews.length > 0) {
-        state.displayedNews = [...state.displayedNews, ...nextNews]; // Добавляем новости в КОНЕЦ списка
-        state.newsLimit += 10; // Увеличиваем лимит
+        const uniqueNextNews = nextNews.filter(
+          (article) =>
+            !state.displayedNews.some(
+              (existingArticle) => existingArticle._id === article._id
+            )
+        );
+
+        if (uniqueNextNews.length > 0) {
+          state.displayedNews = [...state.displayedNews, ...uniqueNextNews];
+          state.newsLimit += 100;
+        }
       }
     },
   },

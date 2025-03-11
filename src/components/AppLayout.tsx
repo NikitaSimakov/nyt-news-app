@@ -9,7 +9,7 @@ const AppLayout: React.FC = () => {
     <div className={styles.container}>
       <Header />
       <NewsList />
-      <NewsItem
+      {/* <NewsItem
         date="2024-02-01T00:02:20+0000"
         title="Why TikTok is taking months to delete personal US user data from servers outside its Project Texas firewalls, even as its political standing sours"
         url="/"
@@ -26,7 +26,7 @@ const AppLayout: React.FC = () => {
         title="Why TikTok is taking months to delete personal US user data from servers outside its Project Texas firewalls, even as its political standing sours"
         url="/"
         source="CNN"
-      />
+      /> */}
     </div>
   );
 };

@@ -1,19 +1,31 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useGetNewsByDateQuery } from "../services/nytApi";
 import NewsItem from "./NewsItem";
 import Loader from "./Loader";
 import styles from "./NewsList.module.scss";
 import { useAppDispatch, useAppSelector } from "../hooks/redux";
 import { loadMoreNews, setAllNews } from "../store/slices/newsSlice";
+import { getPreviousMonth } from "../utils/dateHelpers";
+import { groupNewsByDate } from "../utils/newsHelpers";
+import { useIntersectionObserver } from "../hooks/useIntersectionObserver";
 
 const NewsList: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { displayedNews } = useAppSelector((state) => state.news);
+  const { displayedNews, allNews } = useAppSelector((state) => state.news);
   const date = new Date();
-  const month = date.getMonth() + 1;
-  const year = date.getFullYear();
+  const [month, setMonth] = useState(date.getMonth() + 1);
+  const [year, setYear] = useState(date.getFullYear());
 
-  const { data, isLoading, error } = useGetNewsByDateQuery({
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const fetchMoreRef = useRef<HTMLDivElement | null>(null);
+
+  const handleLoadMore = () => {
+    const newDate = getPreviousMonth(year, month);
+    setYear(newDate.year);
+    setMonth(newDate.month);
+  };
+
+  const { data, isLoading, isFetching } = useGetNewsByDateQuery({
     month,
     year,
   });
@@ -22,43 +34,54 @@ const NewsList: React.FC = () => {
     if (data) {
       dispatch(setAllNews(data.response.docs));
     }
-  }, [data]);
+  }, [data, dispatch]);
 
-  const handleLoadMore = () => {
-    dispatch(loadMoreNews());
-  };
+  useIntersectionObserver(
+    loadMoreRef,
+    () => {
+      if (displayedNews.length < allNews.length) {
+        dispatch(loadMoreNews());
+      }
+    },
+    [displayedNews, allNews, dispatch]
+  );
+  useIntersectionObserver(
+    fetchMoreRef,
+    () => {
+      const remainingNews = allNews.length - displayedNews.length;
+
+      if (remainingNews <= 100 && !isFetching) {
+        handleLoadMore();
+      }
+    },
+    [displayedNews, allNews, month, year, isFetching]
+  );
 
   if (isLoading) return <Loader />;
-  if (error) return <p className={styles.error}>Ошибка загрузки данных</p>;
-
-  const groupedNews: Record<string, typeof displayedNews> =
-    displayedNews.reduce((acc, article) => {
-      const date = new Date(article.pub_date).toLocaleDateString("ru-RU"); // Преобразуем в `5.03.25`
-      if (!acc[date]) acc[date] = []; // Если даты еще нет в объекте → создаем массив
-      acc[date].push(article); // Добавляем новость в соответствующую дату
-      return acc;
-    }, {} as Record<string, typeof displayedNews>);
 
   return (
     <div className={styles.newsList}>
-      {Object.entries(groupedNews).map(([date, articles]) => (
-        <div key={date}>
-          <h2 className={styles.date}>{`News for ${date}`}</h2>{" "}
-          {/* Заголовок даты */}
-          <ul>
-            {articles.map((article) => (
-              <NewsItem
-                key={article._id}
-                title={article.abstract}
-                url={article.web_url}
-                source={article.source}
-                date={article.pub_date}
-              />
-            ))}
-          </ul>
-        </div>
-      ))}
-      <button onClick={handleLoadMore}>Загрузить еще</button>
+      {Object.entries(groupNewsByDate(displayedNews)).map(
+        ([date, articles]) => (
+          <div key={date}>
+            <h2 className={styles.date}>{`Новости за ${date}`}</h2>
+            <ul>
+              {articles.map((article) => (
+                <NewsItem
+                  key={article._id}
+                  title={article.abstract}
+                  url={article.web_url}
+                  source={article.source}
+                  date={article.pub_date}
+                />
+              ))}
+              {isFetching && <Loader />}
+            </ul>
+          </div>
+        )
+      )}
+      <div ref={loadMoreRef} className={styles.observer}></div>{" "}
+      <div ref={fetchMoreRef} className={styles.observer}></div>{" "}
     </div>
   );
 };
